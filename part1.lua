@@ -1173,6 +1173,51 @@ return Label
 
 end
 
+--==============================================================
+--==============================================================
+-- SHARED UI BRIDGE
+--==============================================================
+
+Shared.Gui = ScreenGui
+Shared.MainFrame = MainFrame
+Shared.TabBar = TabBar
+Shared.TabButtons = TabButtons
+Shared.TabIndicators = TabIndicators
+Shared.TabContainers = {
+    AIM = Scroll,
+    VISUALS = VisualsTab,
+    WHITELIST = WhitelistTab,
+    SUPPORTED = SupportedTab,
+    RAGE = RageTab,
+}
+Shared.TabLayouts = {
+    AIM = AimLayout,
+    VISUALS = VisualsLayout,
+    WHITELIST = WhitelistLayout,
+    SUPPORTED = SupportedLayout,
+    RAGE = RageLayout,
+}
+Shared.UI.ScreenGui = ScreenGui
+Shared.UI.MainFrame = MainFrame
+Shared.UI.SetActiveTab = S.SetActiveTab
+Shared.UI.UpdateTabCanvas = S.UpdateTabCanvas
+Shared.UI.CreateSection = S.CreateSection
+Shared.UI.CreateRow = S.CreateRow
+Shared.UI.CreateLabel = S.CreateLabel
+Shared.UI.CreateToggleRow = S.CreateToggleRow
+Shared.UI.CreateInputRow = S.CreateInputRow
+Shared.UI.IsMobile = function()
+    return IsMobile
+end
+Shared.UI.WhitelistTab = WhitelistTab
+Shared.UI.WhitelistLayout = WhitelistLayout
+Shared.UI.RageTab = RageTab
+Shared.UI.RageLayout = RageLayout
+
+--==============================================================
+-- CAMERA MODE CONTROL
+--==============================================================
+
 local CameraRow = S.CreateRow(44)
 S.CreateLabel(CameraRow, "Camera Mode")
 
@@ -1182,7 +1227,7 @@ CameraButton.Position = UDim2.new(1, -8, 0.5, 0)
 CameraButton.Size = UDim2.new(0.42, 0, 0, 30)
 CameraButton.BackgroundColor3 = DARKER
 CameraButton.BorderSizePixel = 0
-CameraButton.Text = Config.CameraMode or "Third Person"
+CameraButton.Text = tostring(Config.CameraMode or "Third Person")
 CameraButton.TextColor3 = WHITE
 CameraButton.TextSize = IsMobile and 9 or 11
 CameraButton.Font = Enum.Font.GothamMedium
@@ -1487,50 +1532,7 @@ S.CreateToggleRow(
 -- LOCK SAFETY CHECKS
 --==============================================================
 
-local WallCheckRow, WallCheckBu
-
---==============================================================
---==============================================================
--- SHARED UI BRIDGE
---==============================================================
-
-Shared.Gui = ScreenGui
-Shared.MainFrame = MainFrame
-Shared.TabBar = TabBar
-Shared.TabButtons = TabButtons
-Shared.TabIndicators = TabIndicators
-Shared.TabContainers = {
-    AIM = Scroll,
-    VISUALS = VisualsTab,
-    WHITELIST = WhitelistTab,
-    SUPPORTED = SupportedTab,
-    RAGE = RageTab,
-}
-Shared.TabLayouts = {
-    AIM = AimLayout,
-    VISUALS = VisualsLayout,
-    WHITELIST = WhitelistLayout,
-    SUPPORTED = SupportedLayout,
-    RAGE = RageLayout,
-}
-Shared.UI.ScreenGui = ScreenGui
-Shared.UI.MainFrame = MainFrame
-Shared.UI.SetActiveTab = S.SetActiveTab
-Shared.UI.UpdateTabCanvas = S.UpdateTabCanvas
-Shared.UI.CreateSection = S.CreateSection
-Shared.UI.CreateRow = S.CreateRow
-Shared.UI.CreateLabel = S.CreateLabel
-Shared.UI.CreateToggleRow = S.CreateToggleRow
-Shared.UI.CreateInputRow = S.CreateInputRow
-Shared.UI.IsMobile = function()
-    return IsMobile
-end
-Shared.UI.WhitelistTab = WhitelistTab
-Shared.UI.WhitelistLayout = WhitelistLayout
-Shared.UI.RageTab = RageTab
-Shared.UI.RageLayout = RageLayout
-
-tton =
+local WallCheckRow, WallCheckButton =
 S.CreateToggleRow(
 "Wall Check",
 
