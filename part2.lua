@@ -286,7 +286,7 @@ function S.CreateFallbackUI()
     end
 
     for Name, Button in pairs(Buttons) do
-        Button.Activated:S.Connect(function()
+        Button.Activated:Connect(function()
             SetActive(Name)
         end)
     end
@@ -346,7 +346,7 @@ function S.CreateFallbackUI()
         Button.BackgroundColor3 = Color3.fromRGB(45, 45, 48)
         Button.Parent = Row
 
-        Button.Activated:S.Connect(function()
+        Button.Activated:Connect(function()
             local Value = not GetValue()
             SetValue(Value)
             Button.Text = Value and "ON" or "OFF"
@@ -423,7 +423,7 @@ local SetActiveTab = UI.SetActiveTab
 local IsMobile = UI.IsMobile and UI.IsMobile() or false
 
 function S.Connect(Signal, Callback)
-    return Signal:S.Connect(Callback)
+    return Signal:Connect(Callback)
 end
 
 local ModuleConnections = {}
@@ -610,7 +610,7 @@ function S.RefreshWhitelistUI()
             Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = Entry
 
-            Entry.Activated:S.Connect(function()
+            Entry.Activated:Connect(function()
                 S.SetWhitelist(
                     Player,
                     not S.IsWhitelisted(Player)
@@ -633,19 +633,19 @@ function S.RefreshWhitelistUI()
 end
 
 S.Track(
-    Players.PlayerAdded:S.Connect(function()
+    Players.PlayerAdded:Connect(function()
         task.defer(S.RefreshWhitelistUI)
     end)
 )
 
 S.Track(
-    Players.PlayerRemoving:S.Connect(function()
+    Players.PlayerRemoving:Connect(function()
         task.defer(S.RefreshWhitelistUI)
     end)
 )
 
 S.Track(
-    PlayerListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):S.Connect(function()
+    PlayerListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         WhitelistContainer.Size =
             UDim2.new(1, 0, 0, PlayerListLayout.AbsoluteContentSize.Y)
     end)
@@ -864,7 +864,7 @@ function S.StartHitboxExtender()
         end
 
         HitboxPlayerConnections[Player] =
-            Player.CharacterAdded:S.Connect(function()
+            Player.CharacterAdded:Connect(function()
                 task.defer(function()
                     if Config.HitboxEnabled then
                         S.RefreshHitboxes()
@@ -879,7 +879,7 @@ function S.StartHitboxExtender()
 
     table.insert(
         HitboxPlayerConnections,
-        Players.PlayerAdded:S.Connect(WatchPlayer)
+        Players.PlayerAdded:Connect(WatchPlayer)
     )
 
     S.RefreshHitboxes()
@@ -1416,7 +1416,7 @@ CreateInputRow(
     Config.HitboxSize
 )
 
-HitboxSizeBox.FocusLost:S.Connect(function()
+HitboxSizeBox.FocusLost:Connect(function()
     local Number = tonumber(HitboxSizeBox.Text)
 
     if Number then
@@ -1496,14 +1496,14 @@ function S.CreateRageDropdownRow(LabelText, Options, GetValue, SetValue)
         Option.ZIndex = 61
         Option.Parent = OptionsFrame
 
-        Option.Activated:S.Connect(function()
+        Option.Activated:Connect(function()
             SetValue(OptionText)
             Button.Text = tostring(GetValue())
             Close()
         end)
     end
 
-    Button.Activated:S.Connect(function()
+    Button.Activated:Connect(function()
         if RageDropdownOpen and RageDropdownOpen ~= OptionsFrame then
             RageDropdownOpen.Visible = false
         end
@@ -1578,7 +1578,7 @@ CreateInputRow(
     Config.FlySpeed
 )
 
-FlySpeedBox.FocusLost:S.Connect(function()
+FlySpeedBox.FocusLost:Connect(function()
     local Number = tonumber(FlySpeedBox.Text)
 
     if Number then
