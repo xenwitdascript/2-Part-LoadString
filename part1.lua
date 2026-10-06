@@ -1173,46 +1173,22 @@ return Label
 
 end
 
---==============================================================
---==============================================================
--- SHARED UI BRIDGE
---==============================================================
+local CameraRow = S.CreateRow(44)
+S.CreateLabel(CameraRow, "Camera Mode")
 
-Shared.Gui = ScreenGui
-Shared.MainFrame = MainFrame
-Shared.TabBar = TabBar
-Shared.TabButtons = TabButtons
-Shared.TabIndicators = TabIndicators
-Shared.TabContainers = {
-    AIM = Scroll,
-    VISUALS = VisualsTab,
-    WHITELIST = WhitelistTab,
-    SUPPORTED = SupportedTab,
-    RAGE = RageTab,
-}
-Shared.TabLayouts = {
-    AIM = AimLayout,
-    VISUALS = VisualsLayout,
-    WHITELIST = WhitelistLayout,
-    SUPPORTED = SupportedLayout,
-    RAGE = RageLayout,
-}
-Shared.UI.ScreenGui = ScreenGui
-Shared.UI.MainFrame = MainFrame
-Shared.UI.SetActiveTab = S.SetActiveTab
-Shared.UI.UpdateTabCanvas = S.UpdateTabCanvas
-Shared.UI.CreateSection = S.CreateSection
-Shared.UI.CreateRow = S.CreateRow
-Shared.UI.CreateLabel = S.CreateLabel
-Shared.UI.CreateToggleRow = S.CreateToggleRow
-Shared.UI.CreateInputRow = S.CreateInputRow
-Shared.UI.IsMobile = function()
-    return IsMobile
-end
-Shared.UI.WhitelistTab = WhitelistTab
-Shared.UI.WhitelistLayout = WhitelistLayout
-Shared.UI.RageTab = RageTab
-Shared.UI.RageLayout = RageLayout
+local CameraButton = Instance.new("TextButton")
+CameraButton.AnchorPoint = Vector2.new(1, 0.5)
+CameraButton.Position = UDim2.new(1, -8, 0.5, 0)
+CameraButton.Size = UDim2.new(0.42, 0, 0, 30)
+CameraButton.BackgroundColor3 = DARKER
+CameraButton.BorderSizePixel = 0
+CameraButton.Text = Config.CameraMode or "Third Person"
+CameraButton.TextColor3 = WHITE
+CameraButton.TextSize = IsMobile and 9 or 11
+CameraButton.Font = Enum.Font.GothamMedium
+CameraButton.AutoButtonColor = false
+CameraButton.ZIndex = 13
+CameraButton.Parent = CameraRow
 
 local CameraCorner = Instance.new("UICorner")
 CameraCorner.CornerRadius = UDim.new(0, 6)
@@ -1234,6 +1210,7 @@ CameraOptions.BackgroundColor3 = DARKER
 CameraOptions.BorderSizePixel = 0
 CameraOptions.ZIndex = 50
 CameraOptions.Parent = CameraRow
+CameraOptions.ZIndex = 50
 
 local CameraOptionsCorner = Instance.new("UICorner")
 CameraOptionsCorner.CornerRadius = UDim.new(0, 6)
@@ -1510,7 +1487,50 @@ S.CreateToggleRow(
 -- LOCK SAFETY CHECKS
 --==============================================================
 
-local WallCheckRow, WallCheckButton =
+local WallCheckRow, WallCheckBu
+
+--==============================================================
+--==============================================================
+-- SHARED UI BRIDGE
+--==============================================================
+
+Shared.Gui = ScreenGui
+Shared.MainFrame = MainFrame
+Shared.TabBar = TabBar
+Shared.TabButtons = TabButtons
+Shared.TabIndicators = TabIndicators
+Shared.TabContainers = {
+    AIM = Scroll,
+    VISUALS = VisualsTab,
+    WHITELIST = WhitelistTab,
+    SUPPORTED = SupportedTab,
+    RAGE = RageTab,
+}
+Shared.TabLayouts = {
+    AIM = AimLayout,
+    VISUALS = VisualsLayout,
+    WHITELIST = WhitelistLayout,
+    SUPPORTED = SupportedLayout,
+    RAGE = RageLayout,
+}
+Shared.UI.ScreenGui = ScreenGui
+Shared.UI.MainFrame = MainFrame
+Shared.UI.SetActiveTab = S.SetActiveTab
+Shared.UI.UpdateTabCanvas = S.UpdateTabCanvas
+Shared.UI.CreateSection = S.CreateSection
+Shared.UI.CreateRow = S.CreateRow
+Shared.UI.CreateLabel = S.CreateLabel
+Shared.UI.CreateToggleRow = S.CreateToggleRow
+Shared.UI.CreateInputRow = S.CreateInputRow
+Shared.UI.IsMobile = function()
+    return IsMobile
+end
+Shared.UI.WhitelistTab = WhitelistTab
+Shared.UI.WhitelistLayout = WhitelistLayout
+Shared.UI.RageTab = RageTab
+Shared.UI.RageLayout = RageLayout
+
+tton =
 S.CreateToggleRow(
 "Wall Check",
 
