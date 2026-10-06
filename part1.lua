@@ -18,14 +18,14 @@ _G.XenonScript1State = S
 -- SERVICES
 --==============================================================
 
-S.Players = game:GetService("S.Players")
-S.UserInputService = game:GetService("S.UserInputService")
-S.RunService = game:GetService("S.RunService")
-S.HttpService = game:GetService("S.HttpService")
-S.MarketplaceService = game:GetService("S.MarketplaceService")
+S.Players = game:GetService("Players")
+S.UserInputService = game:GetService("UserInputService")
+S.RunService = game:GetService("RunService")
+S.HttpService = game:GetService("HttpService")
+S.MarketplaceService = game:GetService("MarketplaceService")
 
 S.LocalPlayer = S.Players.LocalPlayer
-S.PlayerGui = S.LocalPlayer:WaitForChild("S.PlayerGui")
+S.PlayerGui = S.LocalPlayer:WaitForChild("PlayerGui")
 S.Camera = workspace.CurrentCamera
 
 --==============================================================
