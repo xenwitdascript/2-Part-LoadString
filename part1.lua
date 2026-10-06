@@ -1,4 +1,14 @@
 --==============================================================
+-- REGISTER-SAFE XENON SCRIPT 1
+-- AIM + ESP
+-- The runtime namespace S keeps the top-level chunk below Luau's
+-- 200-local register limit. Each subsystem function has its own scope.
+--==============================================================
+
+local S = _G.XenonScript1State or {}
+_G.XenonScript1State = S
+
+--==============================================================
 -- XENON
 -- CONTROLLER CAMERA LOCK + ESP + WHITELIST
 -- MOBILE RESPONSIVE EDITION
@@ -8,21 +18,21 @@
 -- SERVICES
 --==============================================================
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local MarketplaceService = game:GetService("MarketplaceService")
+S.Players = game:GetService("S.Players")
+S.UserInputService = game:GetService("S.UserInputService")
+S.RunService = game:GetService("S.RunService")
+S.HttpService = game:GetService("S.HttpService")
+S.MarketplaceService = game:GetService("S.MarketplaceService")
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local Camera = workspace.CurrentCamera
+S.LocalPlayer = S.Players.LocalPlayer
+S.PlayerGui = S.LocalPlayer:WaitForChild("S.PlayerGui")
+S.Camera = workspace.CurrentCamera
 
 --==============================================================
 -- ADAPTIVE 15-STAGE LOADER
 --==============================================================
 
-local LoaderState = {
+S.LoaderState = {
     Stage = 0,
     FPS = 0,
     FrameTime = 0,
@@ -37,12 +47,12 @@ local LoaderProgress
 local LoaderPercent
 local LoaderPerformance
 
-local function LoaderWarning(Message)
-    table.insert(LoaderState.Warnings, tostring(Message))
+function S.LoaderWarning(Message)
+    table.insert(S.LoaderState.Warnings, tostring(Message))
 end
 
-local function SetLoadingStage(Number, Text)
-    LoaderState.Stage = Number
+function S.SetLoadingStage(Number, Text)
+    S.LoaderState.Stage = Number
 
     if LoaderStatus then
         LoaderStatus.Text = tostring(Number) .. "/15 — " .. Text
@@ -57,7 +67,7 @@ local function SetLoadingStage(Number, Text)
     end
 end
 
-local function CompleteLoadingStage(Number)
+function S.CompleteLoadingStage(Number)
     if LoaderPercent then
         LoaderPercent.Text = tostring(math.floor(Number / 15 * 100)) .. "%"
     end
@@ -67,21 +77,21 @@ local function CompleteLoadingStage(Number)
     end
 end
 
-local function RunLoadingStage(Number, Text, Work)
-    SetLoadingStage(Number, Text)
+function S.RunLoadingStage(Number, Text, Work)
+    S.SetLoadingStage(Number, Text)
 
     local Success, Result = pcall(Work)
     if not Success then
-        LoaderWarning(Text .. " unavailable — using fallback")
+        S.LoaderWarning(Text .. " unavailable — using fallback")
         Result = nil
     end
 
-    CompleteLoadingStage(Number)
+    S.CompleteLoadingStage(Number)
     return Success, Result
 end
 
-local function CreateLoadingScreen()
-    local Existing = PlayerGui:FindFirstChild("XenonLoader")
+function S.CreateLoadingScreen()
+    local Existing = S.PlayerGui:FindFirstChild("XenonLoader")
     if Existing then
         Existing:Destroy()
     end
@@ -92,7 +102,7 @@ local function CreateLoadingScreen()
     Gui.ResetOnSpawn = false
     Gui.DisplayOrder = 2000000
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    Gui.Parent = PlayerGui
+    Gui.Parent = S.PlayerGui
 
     local Panel = Instance.new("Frame")
     Panel.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -184,9 +194,9 @@ local function CreateLoadingScreen()
     return Gui
 end
 
-LoaderGui = CreateLoadingScreen()
+LoaderGui = S.CreateLoadingScreen()
 
-RunLoadingStage(1, "Detecting environment", function()
+S.RunLoadingStage(1, "Detecting environment", function()
     local function Has(Name)
         local Environment
 
@@ -201,29 +211,29 @@ RunLoadingStage(1, "Detecting environment", function()
         return type(Value) == "function"
     end
 
-    LoaderState.Capabilities.Filesystem = Has("isfile")
+    S.LoaderState.Capabilities.Filesystem = Has("isfile")
         and Has("readfile")
         and Has("writefile")
-    LoaderState.Capabilities.isfile = Has("isfile")
-    LoaderState.Capabilities.readfile = Has("readfile")
-    LoaderState.Capabilities.writefile = Has("writefile")
-    LoaderState.Capabilities.delfile = Has("delfile")
-    LoaderState.Capabilities.clipboard = Has("setclipboard")
-    LoaderState.Mobile = workspace.CurrentCamera.ViewportSize.X <= 600
+    S.LoaderState.Capabilities.isfile = Has("isfile")
+    S.LoaderState.Capabilities.readfile = Has("readfile")
+    S.LoaderState.Capabilities.writefile = Has("writefile")
+    S.LoaderState.Capabilities.delfile = Has("delfile")
+    S.LoaderState.Capabilities.clipboard = Has("setclipboard")
+    S.LoaderState.Mobile = workspace.CurrentCamera.ViewportSize.X <= 600
 end)
 
-RunLoadingStage(2, "Measuring client performance", function()
+S.RunLoadingStage(2, "Measuring client performance", function()
     local Started = os.clock()
-    local Delta = RunService.Heartbeat:Wait()
+    local Delta = S.RunService.Heartbeat:Wait()
     if not Delta or Delta <= 0 then
         Delta = os.clock() - Started
     end
 
-    LoaderState.FrameTime = Delta
-    LoaderState.FPS = math.clamp(math.floor(1 / math.max(Delta, 0.001) + 0.5), 1, 999)
+    S.LoaderState.FrameTime = Delta
+    S.LoaderState.FPS = math.clamp(math.floor(1 / math.max(Delta, 0.001) + 0.5), 1, 999)
 
     if LoaderPerformance then
-        LoaderPerformance.Text = "FPS: " .. tostring(LoaderState.FPS)
+        LoaderPerformance.Text = "FPS: " .. tostring(S.LoaderState.FPS)
     end
 end)
 
@@ -284,14 +294,14 @@ end
 
 if not ActiveGameConfig then
 pcall(function()
-LocalPlayer:Kick("Game Not Supported")
+S.LocalPlayer:Kick("Game Not Supported")
 end)
 return
 end
 
-local function GetGameInfo(PlaceId)
+function S.GetGameInfo(PlaceId)
 local Success, Info = pcall(function()
-return MarketplaceService:GetProductInfo(PlaceId)
+return S.MarketplaceService:GetProductInfo(PlaceId)
 end)
 
 if Success and type(Info) == "table" then
@@ -302,9 +312,9 @@ return "Place " .. tostring(PlaceId)
 
 end
 
-local CurrentGameName = GetGameInfo(CurrentPlaceId)
+local CurrentGameName = S.GetGameInfo(CurrentPlaceId)
 
-RunLoadingStage(3, "Validating game", function()
+S.RunLoadingStage(3, "Validating game", function()
     assert(ActiveGameConfig, "No active game configuration")
 end)
 
@@ -329,16 +339,16 @@ if Shared.Modules.RageLoaded or Shared.Modules.WhitelistLoaded then
 end
 
 pcall(function()
-    RunService:UnbindFromRenderStep("XenonCameraLock")
+    S.RunService:UnbindFromRenderStep("XenonCameraLock")
 end)
 
-local OldGui = PlayerGui:FindFirstChild("Xenon")
+local OldGui = S.PlayerGui:FindFirstChild("Xenon")
 if OldGui and not Shared.Gui then
     OldGui:Destroy()
 end
 
-RunLoadingStage(4, "Cleaning previous instance", function()
-    assert(PlayerGui, "PlayerGui unavailable")
+S.RunLoadingStage(4, "Cleaning previous instance", function()
+    assert(S.PlayerGui, "S.PlayerGui unavailable")
 end)
 
 --==============================================================
@@ -389,9 +399,9 @@ Shared.Config = Config
 -- before the UI is created, so the controls open on the saved values.
 
 local SettingsFileName =
-"XenonSettings_" .. tostring(LocalPlayer.UserId) .. ".json"
+"XenonSettings_" .. tostring(S.LocalPlayer.UserId) .. ".json"
 
-local function SerializeConfig()
+function S.SerializeConfig()
 local Data = {}
 
 for Key, Value in pairs(Config) do
@@ -412,25 +422,25 @@ return Data
 
 end
 
-RunLoadingStage(5, "Checking settings support", function()
-    LoaderState.Capabilities.Settings = LoaderState.Capabilities.Filesystem == true
+S.RunLoadingStage(5, "Checking settings support", function()
+    S.LoaderState.Capabilities.Settings = S.LoaderState.Capabilities.Filesystem == true
 end)
 
-local function SaveSettings()
-if not LoaderState.Capabilities.writefile then
+function S.SaveSettings()
+if not S.LoaderState.Capabilities.writefile then
 return
 end
 
 pcall(function()
     writefile(
         SettingsFileName,
-        HttpService:JSONEncode(SerializeConfig())
+        S.HttpService:JSONEncode(S.SerializeConfig())
     )
 end)
 
 end
 
-local function LoadSettings()
+function S.LoadSettings()
 if type(isfile) ~= "function"
 or type(readfile) ~= "function" then
 return
@@ -449,7 +459,7 @@ if not Success or not Data or Data == "" then
 end
 
 local DecodeSuccess, Saved = pcall(function()
-    return HttpService:JSONDecode(Data)
+    return S.HttpService:JSONDecode(Data)
 end)
 
 if not DecodeSuccess or type(Saved) ~= "table" then
@@ -476,12 +486,12 @@ end
 
 end
 
-RunLoadingStage(6, "Loading saved settings", function()
-    LoadSettings()
+S.RunLoadingStage(6, "Loading saved settings", function()
+    S.LoadSettings()
 end)
 
-Shared.SaveSettings = SaveSettings
-Shared.LoadSettings = LoadSettings
+Shared.SaveSettings = S.SaveSettings
+Shared.LoadSettings = S.LoadSettings
 
 -- Never carry the automatic Downed mode from another game.
 -- Only a supported game that explicitly defines DownCheckPath may use it.
@@ -493,7 +503,7 @@ end
 -- STATE
 --==============================================================
 
-RunLoadingStage(8, "Preparing game configuration", function()
+S.RunLoadingStage(8, "Preparing game configuration", function()
     Config.DownCheck = Config.DownCheck and ActiveGameConfig.DownCheckPath ~= nil
     Config.HealthThreshold = math.max(0, tonumber(Config.HealthThreshold) or 10)
 end)
@@ -511,7 +521,7 @@ local ESPObjects = {}
 Shared.Whitelist = Shared.Whitelist or {}
 local Whitelist = Shared.Whitelist
 
-RunLoadingStage(9, "Preparing runtime", function()
+S.RunLoadingStage(9, "Preparing runtime", function()
     assert(type(Connections) == "table", "Runtime state unavailable")
     assert(type(ESPObjects) == "table", "ESP state unavailable")
     assert(type(Whitelist) == "table", "Shared whitelist unavailable")
@@ -519,7 +529,7 @@ end)
 
 Shared.Modules.Aim = Shared.Modules.Aim or {}
 
-local function IsWhitelisted(Player)
+function S.IsWhitelisted(Player)
     if not Player then
         return false
     end
@@ -527,9 +537,9 @@ local function IsWhitelisted(Player)
     return type(List) == "table" and List[Player.UserId] == true
 end
 
-Shared.IsWhitelisted = IsWhitelisted
+Shared.IsWhitelisted = S.IsWhitelisted
 
-local function SetWhitelist(Player, State)
+function S.SetWhitelist(Player, State)
     if not Player then
         return
     end
@@ -544,9 +554,9 @@ local function SetWhitelist(Player, State)
     end
 end
 
-Shared.Modules.Aim.IsWhitelisted = IsWhitelisted
-Shared.Modules.Aim.SetWhitelist = SetWhitelist
-Shared.SetWhitelist = SetWhitelist
+Shared.Modules.Aim.IsWhitelisted = S.IsWhitelisted
+Shared.Modules.Aim.SetWhitelist = S.SetWhitelist
+Shared.SetWhitelist = S.SetWhitelist
 
 --==============================================================
 -- GUI
@@ -554,7 +564,7 @@ Shared.SetWhitelist = SetWhitelist
 
 -- Remove stale XENON instances from previous executions.
 -- This prevents an old empty panel from sitting above the current UI.
-for _, Existing in ipairs(PlayerGui:GetChildren()) do
+for _, Existing in ipairs(S.PlayerGui:GetChildren()) do
 if Existing.Name == "Xenon" then
 pcall(function() Existing:Destroy() end)
 end
@@ -569,8 +579,8 @@ ExistingCore:Destroy()
 end
 end)
 
-RunLoadingStage(10, "Building interface", function()
-    assert(PlayerGui, "PlayerGui unavailable")
+S.RunLoadingStage(10, "Building interface", function()
+    assert(S.PlayerGui, "S.PlayerGui unavailable")
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -582,7 +592,7 @@ ScreenGui.Enabled = false
 -- hidden behind their own parent when another UI is present.
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.DisplayOrder = 1000000
-ScreenGui.Parent = PlayerGui
+ScreenGui.Parent = S.PlayerGui
 
 --==============================================================
 -- COLORS
@@ -715,7 +725,7 @@ Scroll.ScrollingDirection = Enum.ScrollingDirection.Y
 Scroll.ZIndex = 11
 Scroll.Parent = MainFrame
 
-local function ConfigureTabContainer(Container, Name)
+function S.ConfigureTabContainer(Container, Name)
 Container.Name = Name
 Container.BackgroundTransparency = 1
 Container.BorderSizePixel = 0
@@ -762,10 +772,10 @@ AimPadding.PaddingTop = UDim.new(0, 3)
 AimPadding.PaddingBottom = UDim.new(0, 12)
 AimPadding.Parent = Scroll
 
-local VisualsLayout = ConfigureTabContainer(VisualsTab, "TabVisuals")
-local WhitelistLayout = ConfigureTabContainer(WhitelistTab, "TabWhitelist")
-local SupportedLayout = ConfigureTabContainer(SupportedTab, "TabSupported")
-local RageLayout = ConfigureTabContainer(RageTab, "TabRage")
+local VisualsLayout = S.ConfigureTabContainer(VisualsTab, "TabVisuals")
+local WhitelistLayout = S.ConfigureTabContainer(WhitelistTab, "TabWhitelist")
+local SupportedLayout = S.ConfigureTabContainer(SupportedTab, "TabSupported")
+local RageLayout = S.ConfigureTabContainer(RageTab, "TabRage")
 
 local TabBar = Instance.new("Frame")
 TabBar.Name = "TabBar"
@@ -798,7 +808,7 @@ local CurrentTabName = "AIM"
 local TabButtons = {}
 local TabIndicators = {}
 
-local function CreateTab(Name, Order)
+function S.CreateTab(Name, Order)
 local Button = Instance.new("TextButton")
 Button.Name = Name .. "Tab"
 Button.LayoutOrder = Order
@@ -831,17 +841,17 @@ return Button
 
 end
 
-local AimTabButton = CreateTab("AIM", 1)
-local VisualsTabButton = CreateTab("VISUALS", 2)
-local WhitelistTabButton = CreateTab("WHITELIST", 3)
-local SupportedTabButton = CreateTab("SUPPORTED", 4)
-local RageTabButton = CreateTab("RAGE", 5)
+local AimTabButton = S.CreateTab("AIM", 1)
+local VisualsTabButton = S.CreateTab("VISUALS", 2)
+local WhitelistTabButton = S.CreateTab("WHITELIST", 3)
+local SupportedTabButton = S.CreateTab("SUPPORTED", 4)
+local RageTabButton = S.CreateTab("RAGE", 5)
 
-local function UpdateTabCanvas(Container, Layout)
+function S.UpdateTabCanvas(Container, Layout)
 Container.CanvasSize = UDim2.fromOffset(0, Layout.AbsoluteContentSize.Y + 25)
 end
 
-local function SetActiveTab(Name)
+function S.SetActiveTab(Name)
 local Containers = {
 AIM = Scroll,
 VISUALS = VisualsTab,
@@ -874,17 +884,17 @@ for TabName, TabContainer in pairs(Containers) do
     TabContainer.Visible = TabName == Name
 end
 
-UpdateTabCanvas(Container, Layouts[Name])
+S.UpdateTabCanvas(Container, Layouts[Name])
 
 end
 
-AimTabButton.Activated:Connect(function() SetActiveTab("AIM") end)
-VisualsTabButton.Activated:Connect(function() SetActiveTab("VISUALS") end)
-WhitelistTabButton.Activated:Connect(function() SetActiveTab("WHITELIST") end)
-SupportedTabButton.Activated:Connect(function() SetActiveTab("SUPPORTED") end)
-RageTabButton.Activated:Connect(function() SetActiveTab("RAGE") end)
+AimTabButton.Activated:Connect(function() S.SetActiveTab("AIM") end)
+VisualsTabButton.Activated:Connect(function() S.SetActiveTab("VISUALS") end)
+WhitelistTabButton.Activated:Connect(function() S.SetActiveTab("WHITELIST") end)
+SupportedTabButton.Activated:Connect(function() S.SetActiveTab("SUPPORTED") end)
+RageTabButton.Activated:Connect(function() S.SetActiveTab("RAGE") end)
 
-SetActiveTab("AIM")
+S.SetActiveTab("AIM")
 
 --==============================================================
 -- MOBILE RESPONSIVE
@@ -892,8 +902,8 @@ SetActiveTab("AIM")
 
 local IsMobile = false
 
-local function UpdateResponsiveState()
-local Viewport = Camera.ViewportSize
+function S.UpdateResponsiveState()
+local Viewport = S.Camera.ViewportSize
 
 IsMobile = Viewport.X <= 600
 
@@ -1079,7 +1089,7 @@ FloatingStroke.Parent = FloatingToggle
 -- SECTION
 --==============================================================
 
-local function CreateSection(Text)
+function S.CreateSection(Text)
 local Section = Instance.new("TextLabel")
 
 Section.BackgroundTransparency = 1
@@ -1107,7 +1117,7 @@ end
 -- ROW
 --==============================================================
 
-local function CreateRow(Height)
+function S.CreateRow(Height)
 local Row = Instance.new("Frame")
 
 Row.BackgroundColor3 = DARK
@@ -1136,7 +1146,7 @@ end
 -- LABEL
 --==============================================================
 
-local function CreateLabel(Parent, Text)
+function S.CreateLabel(Parent, Text)
 local Label = Instance.new("TextLabel")
 
 Label.BackgroundTransparency = 1
@@ -1189,13 +1199,13 @@ Shared.TabLayouts = {
 }
 Shared.UI.ScreenGui = ScreenGui
 Shared.UI.MainFrame = MainFrame
-Shared.UI.SetActiveTab = SetActiveTab
-Shared.UI.UpdateTabCanvas = UpdateTabCanvas
-Shared.UI.CreateSection = CreateSection
-Shared.UI.CreateRow = CreateRow
-Shared.UI.CreateLabel = CreateLabel
-Shared.UI.CreateToggleRow = CreateToggleRow
-Shared.UI.CreateInputRow = CreateInputRow
+Shared.UI.SetActiveTab = S.SetActiveTab
+Shared.UI.UpdateTabCanvas = S.UpdateTabCanvas
+Shared.UI.CreateSection = S.CreateSection
+Shared.UI.CreateRow = S.CreateRow
+Shared.UI.CreateLabel = S.CreateLabel
+Shared.UI.CreateToggleRow = S.CreateToggleRow
+Shared.UI.CreateInputRow = S.CreateInputRow
 Shared.UI.IsMobile = function()
     return IsMobile
 end
@@ -1232,7 +1242,7 @@ CameraOptionsCorner.Parent = CameraOptions
 local CameraOptionLayout = Instance.new("UIListLayout")
 CameraOptionLayout.Parent = CameraOptions
 
-local function CreateCameraOption(Text)
+function S.CreateCameraOption(Text)
 local Option = Instance.new("TextButton")
 
 Option.Size =
@@ -1250,7 +1260,7 @@ Option.Parent = CameraOptions
 
 Option.Activated:Connect(function()
     Config.CameraMode = Text
-    SaveSettings()
+    S.SaveSettings()
     CameraButton.Text = Text
     CameraOptions.Visible = false
 end)
@@ -1259,8 +1269,8 @@ return Option
 
 end
 
-CreateCameraOption("First Person")
-CreateCameraOption("Third Person")
+S.CreateCameraOption("First Person")
+S.CreateCameraOption("Third Person")
 
 CameraButton.Activated:Connect(function()
 CameraOptions.Visible =
@@ -1271,12 +1281,12 @@ end)
 -- AIM SETTINGS
 --==============================================================
 
-CreateSection("AIM SETTINGS")
+S.CreateSection("AIM SETTINGS")
 
-local function CreateInputRow(LabelText, DefaultValue)
-local Row = CreateRow(44)
+function S.CreateInputRow(LabelText, DefaultValue)
+local Row = S.CreateRow(44)
 
-CreateLabel(Row, LabelText)
+S.CreateLabel(Row, LabelText)
 
 local Box = Instance.new("TextBox")
 
@@ -1314,7 +1324,7 @@ end
 --==============================================================
 
 local OffsetRow, OffsetBox =
-CreateInputRow(
+S.CreateInputRow(
 "3P Offset",
 Config.AimOffset
 )
@@ -1327,7 +1337,7 @@ if Number then
         math.clamp(Number, -100, 100)
 
     Config.AimOffset = Number
-    SaveSettings()
+    S.SaveSettings()
 
     OffsetBox.Text =
         tostring(Number)
@@ -1343,7 +1353,7 @@ end)
 --==============================================================
 
 local SmoothRow, SmoothBox =
-CreateInputRow(
+S.CreateInputRow(
 "Smoothing",
 Config.Smoothing
 )
@@ -1355,7 +1365,7 @@ if Number then
     Number = math.max(0, Number)
 
     Config.Smoothing = Number
-    SaveSettings()
+    S.SaveSettings()
 
     SmoothBox.Text =
         tostring(Number)
@@ -1371,7 +1381,7 @@ end)
 --==============================================================
 
 local PredictionRow, PredictionBox =
-CreateInputRow(
+S.CreateInputRow(
 "Prediction",
 Config.Prediction
 )
@@ -1383,7 +1393,7 @@ if Number then
     Number = math.max(0, Number)
 
     Config.Prediction = Number
-    SaveSettings()
+    S.SaveSettings()
 
     PredictionBox.Text =
         tostring(Number)
@@ -1398,14 +1408,14 @@ end)
 -- TOGGLE CREATOR
 --==============================================================
 
-local function CreateToggleRow(
+function S.CreateToggleRow(
 LabelText,
 GetValue,
 SetValue
 )
-local Row = CreateRow(44)
+local Row = S.CreateRow(44)
 
-CreateLabel(Row, LabelText)
+S.CreateLabel(Row, LabelText)
 
 local Button = Instance.new("TextButton")
 
@@ -1442,10 +1452,10 @@ end
 
 Button.Activated:Connect(function()
     SetValue(not GetValue())
-    Update()
+    S.Update()
 end)
 
-Update()
+S.Update()
 
 return Row, Button
 
@@ -1456,7 +1466,7 @@ end
 --==============================================================
 
 local StickyRow, StickyButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Sticky Aim",
 
     function()
@@ -1465,7 +1475,7 @@ CreateToggleRow(
 
     function(Value)
         Config.StickyAim = Value
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
@@ -1474,7 +1484,7 @@ CreateToggleRow(
 --==============================================================
 
 local AimWhitelistRow, AimWhitelistButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Whitelist Skip",
 
     function()
@@ -1483,12 +1493,12 @@ CreateToggleRow(
 
     function(Value)
         Config.AimbotWhitelistSkip = Value
-        SaveSettings()
+        S.SaveSettings()
 
         -- If currently locked onto someone who is
         -- now protected, immediately unlock.
         if Value and LockedTarget then
-            if IsWhitelisted(LockedTarget) then
+            if S.IsWhitelisted(LockedTarget) then
                 Locked = false
                 LockedTarget = nil
             end
@@ -1501,7 +1511,7 @@ CreateToggleRow(
 --==============================================================
 
 local WallCheckRow, WallCheckButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Wall Check",
 
     function()
@@ -1510,7 +1520,7 @@ CreateToggleRow(
 
     function(Value)
         Config.WallCheck = Value
-        SaveSettings()
+        S.SaveSettings()
 
         -- Re-check the current target immediately when enabled.
         if Value and LockedTarget then
@@ -1521,7 +1531,7 @@ CreateToggleRow(
 )
 
 local DownRow, DownButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Down Check",
 
     function()
@@ -1537,12 +1547,12 @@ CreateToggleRow(
         else
             Config.DownCheck = false
         end
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
 local ManualHealthRow, ManualHealthButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Manual Health",
 
     function()
@@ -1554,12 +1564,12 @@ CreateToggleRow(
         if Value then
             Config.DownCheck = false
         end
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
 local HealthRow, HealthBox =
-CreateInputRow(
+S.CreateInputRow(
 "Health Threshold",
 Config.HealthThreshold
 )
@@ -1570,7 +1580,7 @@ local Number = tonumber(HealthBox.Text)
 if Number then
     Number = math.max(0, Number)
     Config.HealthThreshold = Number
-    SaveSettings()
+    S.SaveSettings()
     HealthBox.Text = tostring(Number)
 else
     HealthBox.Text = tostring(Config.HealthThreshold)
@@ -1581,13 +1591,13 @@ end)
 -- CONTROLLER
 --==============================================================
 
-CreateSection("CONTROLLER")
+S.CreateSection("CONTROLLER")
 
-local LockRow = CreateRow(44)
+local LockRow = S.CreateRow(44)
 
-CreateLabel(
+S.CreateLabel(
 LockRow,
-"Lock Button"
+"S.Lock Button"
 )
 
 local LockButtonDisplay = Instance.new("TextLabel")
@@ -1620,7 +1630,7 @@ local LockCorner = Instance.new("UICorner")
 LockCorner.CornerRadius = UDim.new(0, 6)
 LockCorner.Parent = LockButtonDisplay
 
-local RebindRow = CreateRow(44)
+local RebindRow = S.CreateRow(44)
 
 local RebindButton = Instance.new("TextButton")
 
@@ -1644,7 +1654,7 @@ local RebindCorner = Instance.new("UICorner")
 RebindCorner.CornerRadius = UDim.new(0, 7)
 RebindCorner.Parent = RebindButton
 
-RunLoadingStage(11, "Preparing controls", function()
+S.RunLoadingStage(11, "Preparing controls", function()
     assert(CameraButton and RebindButton, "Core controls unavailable")
 end)
 
@@ -1652,11 +1662,11 @@ end)
 -- VISUALS
 --==============================================================
 
-SetActiveTab("VISUALS")
-CreateSection("VISUALS")
+S.SetActiveTab("VISUALS")
+S.CreateSection("VISUALS")
 
 local ESPEnabledRow, ESPEnabledButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Enabled",
 
     function()
@@ -1665,12 +1675,12 @@ CreateToggleRow(
 
     function(Value)
         Config.ESPEnabled = Value
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
 local ESPNameRow, ESPNameButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Show Name",
 
     function()
@@ -1679,12 +1689,12 @@ CreateToggleRow(
 
     function(Value)
         Config.ESPShowName = Value
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
 local ESPOutlineRow, ESPOutlineButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Show Outline",
 
     function()
@@ -1693,12 +1703,12 @@ CreateToggleRow(
 
     function(Value)
         Config.ESPShowOutline = Value
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
 local ESPWhitelistRow, ESPWhitelistButton =
-CreateToggleRow(
+S.CreateToggleRow(
 "Whitelist Check",
 
     function()
@@ -1707,7 +1717,7 @@ CreateToggleRow(
 
     function(Value)
         Config.ESPWhitelistCheck = Value
-        SaveSettings()
+        S.SaveSettings()
     end
 )
 
@@ -1716,13 +1726,13 @@ CreateToggleRow(
 -- SUPPORTED
 --==============================================================
 
-SetActiveTab("SUPPORTED")
-CreateSection("SUPPORTED GAMES")
+S.SetActiveTab("SUPPORTED")
+S.CreateSection("SUPPORTED GAMES")
 
-local function CreateSupportedGameCard(PlaceId, GameConfig)
-local Name = GetGameInfo(PlaceId)
+function S.CreateSupportedGameCard(PlaceId, GameConfig)
+local Name = S.GetGameInfo(PlaceId)
 
-local Row = CreateRow(72)
+local Row = S.CreateRow(72)
 
 local Icon = Instance.new("ImageLabel")
 Icon.BackgroundColor3 = DARKER
@@ -1767,7 +1777,7 @@ return Row
 
 end
 
-local CurrentGameRow = CreateRow(54)
+local CurrentGameRow = S.CreateRow(54)
 local CurrentGameLabel = Instance.new("TextLabel")
 CurrentGameLabel.BackgroundTransparency = 1
 CurrentGameLabel.Position = UDim2.new(0, 12, 0, 6)
@@ -1794,17 +1804,17 @@ CurrentStatusLabel.ZIndex = 13
 CurrentStatusLabel.Parent = CurrentGameRow
 
 for PlaceId, GameConfig in pairs(SupportedGames) do
-CreateSupportedGameCard(PlaceId, GameConfig)
+S.CreateSupportedGameCard(PlaceId, GameConfig)
 end
 
 --==============================================================
 -- STATUS
 --==============================================================
 
-SetActiveTab("AIM")
-CreateSection("STATUS")
+S.SetActiveTab("AIM")
+S.CreateSection("STATUS")
 
-local StatusRow = CreateRow(55)
+local StatusRow = S.CreateRow(55)
 
 local StatusLabel = Instance.new("TextLabel")
 
@@ -1851,7 +1861,7 @@ TargetLabel.ZIndex = 13
 TargetLabel.Parent = StatusRow
 
 --==============================================================
-RunLoadingStage(12, "Preparing ESP", function()
+S.RunLoadingStage(12, "Preparing ESP", function()
     assert(type(ESPObjects) == "table", "ESP state unavailable")
 end)
 
@@ -1859,7 +1869,7 @@ end)
 -- ESP
 --==============================================================
 
-local function DestroyESP(Player)
+function S.DestroyESP(Player)
 local Data = ESPObjects[Player]
 
 if not Data then
@@ -1882,8 +1892,8 @@ ESPObjects[Player] = nil
 
 end
 
-local function CreateESP(Player)
-if Player == LocalPlayer then
+function S.CreateESP(Player)
+if Player == S.LocalPlayer then
 return
 end
 
@@ -1892,7 +1902,7 @@ if Existing and Existing.Character == Player.Character then
     return
 end
 
-DestroyESP(Player)
+S.DestroyESP(Player)
 
 local Character = Player.Character
 
@@ -2004,8 +2014,8 @@ ESPObjects[Player] = Data
 
 end
 
-local function ShouldESP(Player)
-if Player == LocalPlayer then
+function S.ShouldESP(Player)
+if Player == S.LocalPlayer then
 return false
 end
 
@@ -2014,7 +2024,7 @@ if not Config.ESPEnabled then
 end
 
 if Config.ESPWhitelistCheck
-    and IsWhitelisted(Player) then
+    and S.IsWhitelisted(Player) then
 
     return false
 end
@@ -2023,41 +2033,41 @@ return true
 
 end
 
-local function UpdateESPPlayer(Player)
-if Player == LocalPlayer then
+function S.UpdateESPPlayer(Player)
+if Player == S.LocalPlayer then
 return
 end
 
-if ShouldESP(Player) then
-    CreateESP(Player)
+if S.ShouldESP(Player) then
+    S.CreateESP(Player)
 else
-    DestroyESP(Player)
+    S.DestroyESP(Player)
 end
 
 end
 
-local function UpdateAllESP()
-for _, Player in ipairs(Players:GetPlayers()) do
-UpdateESPPlayer(Player)
+function S.UpdateAllESP()
+for _, Player in ipairs(S.Players:GetPlayers()) do
+S.UpdateESPPlayer(Player)
 end
 end
 
 -- Rebuild ESP when settings change.
 
 ESPEnabledButton.Activated:Connect(function()
-task.defer(UpdateAllESP)
+task.defer(S.UpdateAllESP)
 end)
 
 ESPNameButton.Activated:Connect(function()
-task.defer(UpdateAllESP)
+task.defer(S.UpdateAllESP)
 end)
 
 ESPOutlineButton.Activated:Connect(function()
-task.defer(UpdateAllESP)
+task.defer(S.UpdateAllESP)
 end)
 
 ESPWhitelistButton.Activated:Connect(function()
-task.defer(UpdateAllESP)
+task.defer(S.UpdateAllESP)
 end)
 
 --==============================================================
@@ -2065,33 +2075,33 @@ end)
 --==============================================================
 
 Connect(
-Players.PlayerAdded,
+S.Players.PlayerAdded,
 function(Player)
 task.defer(function()
 
         if Player.Character then
-            UpdateESPPlayer(Player)
+            S.UpdateESPPlayer(Player)
         end
     end)
 
     Player.CharacterAdded:Connect(function()
         task.wait(0.5)
 
-        UpdateESPPlayer(Player)
+        S.UpdateESPPlayer(Player)
     end)
 end
 
 )
 
 Connect(
-Players.PlayerRemoving,
+S.Players.PlayerRemoving,
 function(Player)
 if Player == LockedTarget then
 Locked = false
 LockedTarget = nil
 end
 
-    DestroyESP(Player)
+    S.DestroyESP(Player)
 
     task.defer(function()
             end)
@@ -2099,21 +2109,21 @@ end
 
 )
 
-for _, Player in ipairs(Players:GetPlayers()) do
-if Player ~= LocalPlayer then
+for _, Player in ipairs(S.Players:GetPlayers()) do
+if Player ~= S.LocalPlayer then
 Connect(
 Player.CharacterAdded,
 function()
 task.wait(0.5)
 
-            UpdateESPPlayer(Player)
+            S.UpdateESPPlayer(Player)
         end
     )
 end
 
 end
 
-RunLoadingStage(13, "Connecting runtime systems", function()
+S.RunLoadingStage(13, "Connecting runtime systems", function()
     assert(type(Connections) == "table", "Connection tracking unavailable")
 end)
 
@@ -2121,12 +2131,12 @@ end)
 -- TARGET DATA
 --==============================================================
 
-local function GetCharacterData(Player)
+function S.GetCharacterData(Player)
 if not Player then
 return nil
 end
 
-if Player == LocalPlayer then
+if Player == S.LocalPlayer then
     return nil
 end
 
@@ -2165,9 +2175,9 @@ end
 -- LOCAL ROOT
 --==============================================================
 
-local function GetLocalRoot()
+function S.GetLocalRoot()
 local Character =
-LocalPlayer.Character
+S.LocalPlayer.Character
 
 if not Character then
     return nil
@@ -2187,7 +2197,7 @@ end
 -- Matching is case-insensitive for Backpack/BackPack, Stats/stats,
 -- and Downed/DOWNED.
 
-local function FindChildCaseInsensitive(Parent, WantedName)
+function S.FindChildCaseInsensitive(Parent, WantedName)
 if not Parent then
 return nil
 end
@@ -2204,11 +2214,11 @@ return nil
 
 end
 
-local function GetPathValueCaseInsensitive(Root, Path)
+function S.GetPathValueCaseInsensitive(Root, Path)
 local Current = Root
 
 for _, Name in ipairs(Path or {}) do
-    Current = FindChildCaseInsensitive(Current, Name)
+    Current = S.FindChildCaseInsensitive(Current, Name)
     if not Current then
         return nil
     end
@@ -2218,13 +2228,13 @@ return Current
 
 end
 
-local function IsTargetDown(Player)
+function S.IsTargetDown(Player)
 if not Player or not ActiveGameConfig.DownCheckPath then
 return false
 end
 
 local ValueObject =
-    GetPathValueCaseInsensitive(
+    S.GetPathValueCaseInsensitive(
         Player,
         ActiveGameConfig.DownCheckPath
     )
@@ -2241,7 +2251,7 @@ return Success and Value == true
 
 end
 
-local function IsTargetBelowHealth(Player)
+function S.IsTargetBelowHealth(Player)
 if not Player then
 return false
 end
@@ -2260,7 +2270,7 @@ return Humanoid.Health <= Config.HealthThreshold
 
 end
 
-local function IsHeadVisible(Player)
+function S.IsHeadVisible(Player)
 if not Player then
 return false
 end
@@ -2287,7 +2297,7 @@ end
 local Params = RaycastParams.new()
 Params.FilterType = Enum.RaycastFilterType.Exclude
 Params.FilterDescendantsInstances = {
-    LocalPlayer.Character
+    S.LocalPlayer.Character
 }
 Params.IgnoreWater = true
 
@@ -2305,23 +2315,23 @@ return Result.Instance:IsDescendantOf(Character)
 
 end
 
-local function IsTargetLockable(Player)
+function S.IsTargetLockable(Player)
 if not Player then
 return false
 end
 
 if Config.DownCheck
     and ActiveGameConfig.DownCheckPath
-    and IsTargetDown(Player) then
+    and S.IsTargetDown(Player) then
     return false
 end
 
 if Config.ManualHealthCheck
-    and IsTargetBelowHealth(Player) then
+    and S.IsTargetBelowHealth(Player) then
     return false
 end
 
-if Config.WallCheck and not IsHeadVisible(Player) then
+if Config.WallCheck and not S.IsHeadVisible(Player) then
     return false
 end
 
@@ -2346,7 +2356,7 @@ Crosshair = true,
 Cursor = true,
 }
 
-local function GetControllerDotPosition()
+function S.GetControllerDotPosition()
 local CurrentCamera = workspace.CurrentCamera
 
 if not CurrentCamera then
@@ -2361,7 +2371,7 @@ local BestPosition = nil
 local BestScore = math.huge
 
 -- Prefer an actual game UI reticle/dot when the game exposes one.
-for _, Object in ipairs(PlayerGui:GetDescendants()) do
+for _, Object in ipairs(S.PlayerGui:GetDescendants()) do
     if Object:IsA("GuiObject")
         and Object.Visible
         and ControllerDotNames[Object.Name] then
@@ -2400,7 +2410,7 @@ return ScreenCenter
 
 end
 
-local function GetTargetScreenPosition(Player)
+function S.GetTargetScreenPosition(Player)
 local CurrentCamera = workspace.CurrentCamera
 
 if not CurrentCamera then
@@ -2427,14 +2437,14 @@ return CurrentCamera:WorldToViewportPoint(Position)
 
 end
 
-local function GetClosestToControllerDot()
+function S.GetClosestToControllerDot()
 local CurrentCamera = workspace.CurrentCamera
 
 if not CurrentCamera then
     return nil
 end
 
-local DotPosition = GetControllerDotPosition()
+local DotPosition = S.GetControllerDotPosition()
 if not DotPosition then
     return nil
 end
@@ -2442,25 +2452,25 @@ end
 local BestPlayer = nil
 local BestDistance = math.huge
 
-for _, Player in ipairs(Players:GetPlayers()) do
+for _, Player in ipairs(S.Players:GetPlayers()) do
     if not (
         Config.AimbotWhitelistSkip
-        and IsWhitelisted(Player)
+        and S.IsWhitelisted(Player)
     ) then
         local Character, Humanoid, Root =
-            GetCharacterData(Player)
+            S.GetCharacterData(Player)
 
         if Character
             and Humanoid
             and Root
-            and IsTargetLockable(Player) then
+            and S.IsTargetLockable(Player) then
 
             local WorldDistance =
                 (Root.Position - CurrentCamera.CFrame.Position).Magnitude
 
             if WorldDistance <= Config.MaxTargetDistance then
                 local ScreenPosition, OnScreen =
-                    GetTargetScreenPosition(Player)
+                    S.GetTargetScreenPosition(Player)
 
                 if OnScreen and ScreenPosition.Z > 0 then
                     local ScreenDistance =
@@ -2489,9 +2499,9 @@ end
 -- PHYSICAL DISTANCE TARGET
 --==============================================================
 
-local function GetClosestByDistance()
+function S.GetClosestByDistance()
 local LocalRoot =
-GetLocalRoot()
+S.GetLocalRoot()
 
 if not LocalRoot then
     return nil
@@ -2502,24 +2512,24 @@ local BestPlayer = nil
 local BestDistance =
     Config.MaxTargetDistance
 
-for _, Player in ipairs(Players:GetPlayers()) do
+for _, Player in ipairs(S.Players:GetPlayers()) do
 
     if
         not (
             Config.AimbotWhitelistSkip
-            and IsWhitelisted(Player)
+            and S.IsWhitelisted(Player)
         )
     then
 
         local Character,
             Humanoid,
             Root =
-            GetCharacterData(Player)
+            S.GetCharacterData(Player)
 
         if Character
             and Humanoid
             and Root
-            and IsTargetLockable(Player) then
+            and S.IsTargetLockable(Player) then
 
             local Distance =
                 (
@@ -2548,12 +2558,12 @@ end
 -- FIND TARGET
 --==============================================================
 
-local function FindTarget()
+function S.FindTarget()
 if Config.StickyAim then
-return GetClosestToControllerDot()
+return S.GetClosestToControllerDot()
 end
 
-return GetClosestByDistance()
+return S.GetClosestByDistance()
 
 end
 
@@ -2561,7 +2571,7 @@ end
 -- PREDICTION
 --==============================================================
 
-local function GetPredictedPosition(
+function S.GetPredictedPosition(
 Position,
 Velocity
 )
@@ -2583,7 +2593,7 @@ end
 -- THIRD PERSON ADAPTIVE OFFSET
 --==============================================================
 
-local function GetAdaptiveOffset(TargetRoot)
+function S.GetAdaptiveOffset(TargetRoot)
 if not TargetRoot then
 return Config.AimOffset
 end
@@ -2636,11 +2646,11 @@ end
 -- AIM POSITION
 --==============================================================
 
-local function GetAimPosition(Player)
+function S.GetAimPosition(Player)
 local Character,
 Humanoid,
 Root =
-GetCharacterData(Player)
+S.GetCharacterData(Player)
 
 if not Character
     or not Humanoid
@@ -2658,13 +2668,13 @@ if Config.CameraMode ==
         )
 
     if Head then
-        return GetPredictedPosition(
+        return S.GetPredictedPosition(
             Head.Position,
             Head.AssemblyLinearVelocity
         )
     end
 
-    return GetPredictedPosition(
+    return S.GetPredictedPosition(
         Root.Position,
         Root.AssemblyLinearVelocity
     )
@@ -2705,7 +2715,7 @@ else
 end
 
 local Predicted =
-    GetPredictedPosition(
+    S.GetPredictedPosition(
         AnchorPosition,
         AnchorVelocity
     )
@@ -2715,7 +2725,7 @@ if not Predicted then
 end
 
 local Offset =
-    tonumber(GetAdaptiveOffset(Root)) or 0
+    tonumber(S.GetAdaptiveOffset(Root)) or 0
 
 return Predicted -
     Vector3.new(
@@ -2730,7 +2740,7 @@ end
 -- STATUS
 --==============================================================
 
-local function UpdateStatus()
+function S.UpdateStatus()
 if Locked
 and LockedTarget then
 
@@ -2760,11 +2770,11 @@ end
 -- UNLOCK
 --==============================================================
 
-local function Unlock()
+function S.Unlock()
 Locked = false
 LockedTarget = nil
 
-UpdateStatus()
+S.UpdateStatus()
 
 end
 
@@ -2772,28 +2782,28 @@ end
 -- LOCK
 --==============================================================
 
-local function Lock()
+function S.Lock()
 if Locked then
-Unlock()
+S.Unlock()
 return
 end
 
 local Target =
-    FindTarget()
+    S.FindTarget()
 
 if not Target then
-    UpdateStatus()
+    S.UpdateStatus()
     return
 end
 
 if Config.AimbotWhitelistSkip
-    and IsWhitelisted(Target) then
+    and S.IsWhitelisted(Target) then
 
     return
 end
 
-if not IsTargetLockable(Target) then
-    UpdateStatus()
+if not S.IsTargetLockable(Target) then
+    S.UpdateStatus()
     return
 end
 
@@ -2802,7 +2812,7 @@ LockedTarget =
 
 Locked = true
 
-UpdateStatus()
+S.UpdateStatus()
 
 end
 
@@ -2810,17 +2820,17 @@ end
 -- TARGET VALIDATION
 --==============================================================
 
-local function IsTargetValid(Player)
+function S.IsTargetValid(Player)
 if not Player then
 return false
 end
 
-if Player.Parent ~= Players then
+if Player.Parent ~= S.Players then
     return false
 end
 
 if Config.AimbotWhitelistSkip
-    and IsWhitelisted(Player) then
+    and S.IsWhitelisted(Player) then
 
     return false
 end
@@ -2828,7 +2838,7 @@ end
 local Character,
     Humanoid,
     Root =
-    GetCharacterData(Player)
+    S.GetCharacterData(Player)
 
 if Character == nil
     or Humanoid == nil
@@ -2838,7 +2848,7 @@ if Character == nil
 end
 
 -- Revalidate the active target against the same down/wall checks.
-return IsTargetLockable(Player)
+return S.IsTargetLockable(Player)
 
 end
 
@@ -2879,7 +2889,7 @@ local SupportedButtons = {
 --==============================================================
 
 Connect(
-UserInputService.InputBegan,
+S.UserInputService.InputBegan,
 function(Input, GameProcessed)
 
     if GameProcessed then
@@ -2902,7 +2912,7 @@ function(Input, GameProcessed)
             Config.LockButton =
                 Input.KeyCode
 
-            SaveSettings()
+            S.SaveSettings()
 
             LockButtonDisplay.Text =
                 Input.KeyCode.Name
@@ -2923,7 +2933,7 @@ function(Input, GameProcessed)
     if Input.KeyCode ==
         Config.LockButton then
 
-        Lock()
+        S.Lock()
     end
 end
 
@@ -3004,9 +3014,9 @@ end)
 --==============================================================
 
 Connect(
-LocalPlayer.CharacterAdded,
+S.LocalPlayer.CharacterAdded,
 function()
-Unlock()
+S.Unlock()
 end
 )
 
@@ -3014,7 +3024,7 @@ end
 -- CAMERA LOCK
 --==============================================================
 
-RunService:BindToRenderStep(
+S.RunService:BindToRenderStep(
 "XenonCameraLock",
 Enum.RenderPriority.Last.Value,
 function()
@@ -3023,11 +3033,11 @@ function()
         return
     end
 
-    if not IsTargetValid(
+    if not S.IsTargetValid(
         LockedTarget
     ) then
 
-        Unlock()
+        S.Unlock()
         return
     end
 
@@ -3039,12 +3049,12 @@ function()
     end
 
     local AimPosition =
-        GetAimPosition(
+        S.GetAimPosition(
             LockedTarget
         )
 
     if not AimPosition then
-        Unlock()
+        S.Unlock()
         return
     end
 
@@ -3134,7 +3144,7 @@ end
 end)
 
 Connect(
-UserInputService.InputChanged,
+S.UserInputService.InputChanged,
 function(Input)
 
     if not Dragging then
@@ -3172,33 +3182,33 @@ end
 -- RESPONSIVE CAMERA
 --==============================================================
 
-UpdateResponsiveState()
+S.UpdateResponsiveState()
 
-Camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateResponsiveState)
+S.Camera:GetPropertyChangedSignal("ViewportSize"):Connect(S.UpdateResponsiveState)
 
 --==============================================================
 -- CANVAS SIZE
 --==============================================================
 
 AimLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-UpdateTabCanvas(Scroll, AimLayout)
+S.UpdateTabCanvas(Scroll, AimLayout)
 end)
 
 VisualsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-UpdateTabCanvas(VisualsTab, VisualsLayout)
+S.UpdateTabCanvas(VisualsTab, VisualsLayout)
 end)
 
 WhitelistLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-UpdateTabCanvas(WhitelistTab, WhitelistLayout)
+S.UpdateTabCanvas(WhitelistTab, WhitelistLayout)
 end)
 
 SupportedLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-UpdateTabCanvas(SupportedTab, SupportedLayout)
+S.UpdateTabCanvas(SupportedTab, SupportedLayout)
 end)
 
 --==============================================================
 RageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    UpdateTabCanvas(RageTab, RageLayout)
+    S.UpdateTabCanvas(RageTab, RageLayout)
 end)
 
 --==============================================================
@@ -3206,11 +3216,11 @@ end)
 --==============================================================
 
 task.defer(function()
-UpdateAllESP()
+S.UpdateAllESP()
 end)
 
-RunLoadingStage(14, "Final performance check", function()
-    assert(ScreenGui.Parent == PlayerGui, "Xenon GUI is not ready")
+S.RunLoadingStage(14, "Final performance check", function()
+    assert(ScreenGui.Parent == S.PlayerGui, "Xenon GUI is not ready")
     assert(ActiveGameConfig, "Game configuration is not ready")
     assert(type(Whitelist) == "table", "Whitelist is not ready")
     assert(type(Connections) == "table", "Connections are not ready")
@@ -3221,7 +3231,7 @@ end)
 --==============================================================
 -- Use Global ZIndex and give every descendant a layer above its parent.
 -- This prevents the black MainFrame from covering its own controls.
-local function RepairXenonZIndex()
+function S.RepairXenonZIndex()
 MainFrame.ZIndex = 1
 
 for _, Object in ipairs(MainFrame:GetDescendants()) do
@@ -3243,7 +3253,7 @@ FloatingToggle.ZIndex = 1000000
 
 end
 
-RepairXenonZIndex()
+S.RepairXenonZIndex()
 
 --==============================================================
 --==============================================================
@@ -3262,11 +3272,11 @@ end
 
 Shared.Cleanup.Aim = function()
     pcall(function()
-        RunService:UnbindFromRenderStep("XenonCameraLock")
+        S.RunService:UnbindFromRenderStep("XenonCameraLock")
     end)
 
     for Player in pairs(ESPObjects) do
-        pcall(DestroyESP, Player)
+        pcall(S.DestroyESP, Player)
     end
 
     Shared.Modules.AimLoaded = false
@@ -3284,7 +3294,7 @@ Shared.Cleanup.Full = function()
     end
     pcall(DisconnectAll)
 
-    local Gui = PlayerGui:FindFirstChild("Xenon")
+    local Gui = S.PlayerGui:FindFirstChild("Xenon")
     if Gui then
         Gui:Destroy()
     end
@@ -3305,18 +3315,18 @@ if LoaderGui then
     LoaderGui = nil
 end
 
-RunLoadingStage(15, "Xenon AIM + ESP ready", function()
+S.RunLoadingStage(15, "Xenon AIM + ESP ready", function()
     ScreenGui.Enabled = true
     assert(type(Shared.Cleanup.Aim) == "function", "AIM cleanup is not registered")
 end)
 
-SaveSettings()
-UpdateStatus()
+S.SaveSettings()
+S.UpdateStatus()
 
 print("======================================")
 print("XENON AIM + ESP LOADED")
 print("3P Offset:", Config.AimOffset)
-print("Lock Button:", Config.LockButton.Name)
+print("S.Lock Button:", Config.LockButton.Name)
 print("Sticky Aim:", Config.StickyAim)
 print("Aimbot Whitelist Skip:", Config.AimbotWhitelistSkip)
 print("ESP:", Config.ESPEnabled)
