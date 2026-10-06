@@ -1,4 +1,14 @@
 --==============================================================
+-- REGISTER-SAFE XENON SCRIPT 2
+-- WHITELIST + RAGE
+-- Top-level subsystem functions are stored on S rather than local
+-- registers, and each heavy subsystem has its own function scope.
+--==============================================================
+
+local S = _G.XenonScript2State or {}
+_G.XenonScript2State = S
+
+--==============================================================
 -- XENON SCRIPT 2
 -- WHITELIST + RAGE
 -- Attaches to Script 1 through _G.XenonShared.
@@ -137,7 +147,7 @@ end
 -- WAIT FOR SCRIPT 1 / FALLBACK SHARED UI
 --==============================================================
 
-local function HasSharedUI()
+function S.HasSharedUI()
     return Shared.Gui
         and Shared.Gui.Parent
         and Shared.UI
@@ -147,13 +157,13 @@ local function HasSharedUI()
 end
 
 local WaitStarted = os.clock()
-while not HasSharedUI()
+while not S.HasSharedUI()
     and os.clock() - WaitStarted < 5 do
     task.wait(0.1)
 end
 
-local function CreateFallbackUI()
-    if HasSharedUI() then
+function S.CreateFallbackUI()
+    if S.HasSharedUI() then
         return
     end
 
@@ -276,7 +286,7 @@ local function CreateFallbackUI()
     end
 
     for Name, Button in pairs(Buttons) do
-        Button.Activated:Connect(function()
+        Button.Activated:S.Connect(function()
             SetActive(Name)
         end)
     end
@@ -336,7 +346,7 @@ local function CreateFallbackUI()
         Button.BackgroundColor3 = Color3.fromRGB(45, 45, 48)
         Button.Parent = Row
 
-        Button.Activated:Connect(function()
+        Button.Activated:S.Connect(function()
             local Value = not GetValue()
             SetValue(Value)
             Button.Text = Value and "ON" or "OFF"
@@ -400,7 +410,7 @@ local function CreateFallbackUI()
     SetActive("AIM")
 end
 
-CreateFallbackUI()
+S.CreateFallbackUI()
 
 local UI = Shared.UI
 local CreateRow = UI.CreateRow
@@ -412,13 +422,13 @@ local SetActiveTab = UI.SetActiveTab
 
 local IsMobile = UI.IsMobile and UI.IsMobile() or false
 
-local function Connect(Signal, Callback)
-    return Signal:Connect(Callback)
+function S.Connect(Signal, Callback)
+    return Signal:S.Connect(Callback)
 end
 
 local ModuleConnections = {}
 
-local function Track(Connection)
+function S.Track(Connection)
     if Connection then
         table.insert(ModuleConnections, Connection)
     end
@@ -432,7 +442,7 @@ end
 local Whitelist = Shared.Whitelist
 local WhitelistFileName = "XenonWhitelist.json"
 
-local function LoadWhitelist()
+function S.LoadWhitelist()
     table.clear(Whitelist)
 
     if type(isfile) ~= "function"
@@ -467,7 +477,7 @@ local function LoadWhitelist()
     end
 end
 
-local function SaveWhitelist()
+function S.SaveWhitelist()
     if type(writefile) ~= "function" then
         return
     end
@@ -493,12 +503,12 @@ local function SaveWhitelist()
     end)
 end
 
-local function IsWhitelisted(Player)
+function S.IsWhitelisted(Player)
     return Player
         and Whitelist[Player.UserId] == true
 end
 
-local function SetWhitelist(Player, State)
+function S.SetWhitelist(Player, State)
     if not Player then
         return
     end
@@ -509,7 +519,7 @@ local function SetWhitelist(Player, State)
         Whitelist[Player.UserId] = nil
     end
 
-    SaveWhitelist()
+    S.SaveWhitelist()
 
     if Shared.OnWhitelistChanged then
         pcall(Shared.OnWhitelistChanged, Player, State)
@@ -517,10 +527,10 @@ local function SetWhitelist(Player, State)
 end
 
 Shared.Whitelist = Whitelist
-Shared.IsWhitelisted = IsWhitelisted
-Shared.SetWhitelist = SetWhitelist
+Shared.IsWhitelisted = S.IsWhitelisted
+Shared.SetWhitelist = S.SetWhitelist
 
-LoadWhitelist()
+S.LoadWhitelist()
 
 --==============================================================
 -- WHITELIST UI
@@ -554,7 +564,7 @@ PlayerListLayout.Padding = UDim.new(0, 6)
 PlayerListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 PlayerListLayout.Parent = WhitelistContainer
 
-local function ClearWhitelistUI()
+function S.ClearWhitelistUI()
     for _, Child in ipairs(WhitelistContainer:GetChildren()) do
         if Child:IsA("GuiObject") then
             Child:Destroy()
@@ -562,8 +572,8 @@ local function ClearWhitelistUI()
     end
 end
 
-local function RefreshWhitelistUI()
-    ClearWhitelistUI()
+function S.RefreshWhitelistUI()
+    S.ClearWhitelistUI()
 
     local PlayerList = Players:GetPlayers()
     table.sort(
@@ -579,7 +589,7 @@ local function RefreshWhitelistUI()
             Entry.Name = "Whitelist_" .. tostring(Player.UserId)
             Entry.Size = UDim2.new(1, 0, 0, 40)
             Entry.BackgroundColor3 =
-                IsWhitelisted(Player)
+                S.IsWhitelisted(Player)
                 and Color3.fromRGB(225, 50, 50)
                 or Color3.fromRGB(35, 35, 38)
             Entry.BorderSizePixel = 0
@@ -600,13 +610,13 @@ local function RefreshWhitelistUI()
             Corner.CornerRadius = UDim.new(0, 8)
             Corner.Parent = Entry
 
-            Entry.Activated:Connect(function()
-                SetWhitelist(
+            Entry.Activated:S.Connect(function()
+                S.SetWhitelist(
                     Player,
-                    not IsWhitelisted(Player)
+                    not S.IsWhitelisted(Player)
                 )
                 Entry.BackgroundColor3 =
-                    IsWhitelisted(Player)
+                    S.IsWhitelisted(Player)
                     and Color3.fromRGB(225, 50, 50)
                     or Color3.fromRGB(35, 35, 38)
             end)
@@ -622,26 +632,26 @@ local function RefreshWhitelistUI()
     )
 end
 
-Track(
-    Players.PlayerAdded:Connect(function()
-        task.defer(RefreshWhitelistUI)
+S.Track(
+    Players.PlayerAdded:S.Connect(function()
+        task.defer(S.RefreshWhitelistUI)
     end)
 )
 
-Track(
-    Players.PlayerRemoving:Connect(function()
-        task.defer(RefreshWhitelistUI)
+S.Track(
+    Players.PlayerRemoving:S.Connect(function()
+        task.defer(S.RefreshWhitelistUI)
     end)
 )
 
-Track(
-    PlayerListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+S.Track(
+    PlayerListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):S.Connect(function()
         WhitelistContainer.Size =
             UDim2.new(1, 0, 0, PlayerListLayout.AbsoluteContentSize.Y)
     end)
 )
 
-RefreshWhitelistUI()
+S.RefreshWhitelistUI()
 
 --==============================================================
 -- RAGE
@@ -674,7 +684,7 @@ local RapidFireLastTool = nil
 
 local RageDropdownOpen = nil
 
-local function GetHitboxPart(Character)
+function S.GetHitboxPart(Character)
     if not Character then
         return nil
     end
@@ -703,7 +713,7 @@ local function GetHitboxPart(Character)
     return nil
 end
 
-local function RestoreHitboxPart(Part)
+function S.RestoreHitboxPart(Part)
     local Original = HitboxOriginals[Part]
     if not Original or not Part or not Part.Parent then
         HitboxOriginals[Part] = nil
@@ -722,19 +732,19 @@ local function RestoreHitboxPart(Part)
     HitboxOriginals[Part] = nil
 end
 
-local function RestoreAllHitboxes()
+function S.RestoreAllHitboxes()
     for Part in pairs(HitboxOriginals) do
-        RestoreHitboxPart(Part)
+        S.RestoreHitboxPart(Part)
     end
     table.clear(HitboxOriginals)
 end
 
-local function ShouldSkipHitbox(Player)
+function S.ShouldSkipHitbox(Player)
     if not Player or Player == LocalPlayer then
         return true
     end
 
-    if Config.HitboxWhitelistSkip and IsWhitelisted(Player) then
+    if Config.HitboxWhitelistSkip and S.IsWhitelisted(Player) then
         return true
     end
 
@@ -748,13 +758,13 @@ local function ShouldSkipHitbox(Player)
     return false
 end
 
-local function ApplyHitbox(Player)
-    if not Config.HitboxEnabled or ShouldSkipHitbox(Player) then
+function S.ApplyHitbox(Player)
+    if not Config.HitboxEnabled or S.ShouldSkipHitbox(Player) then
         return
     end
 
     local Character = Player.Character
-    local Part = GetHitboxPart(Character)
+    local Part = S.GetHitboxPart(Character)
     if not Part then
         return
     end
@@ -783,9 +793,9 @@ local function ApplyHitbox(Player)
     end)
 end
 
-local function RefreshHitboxes()
+function S.RefreshHitboxes()
     if not Config.HitboxEnabled then
-        RestoreAllHitboxes()
+        S.RestoreAllHitboxes()
         return
     end
 
@@ -794,23 +804,23 @@ local function RefreshHitboxes()
     for _, Player in ipairs(Players:GetPlayers()) do
         if Player ~= LocalPlayer then
             local Character = Player.Character
-            local Part = GetHitboxPart(Character)
+            local Part = S.GetHitboxPart(Character)
 
-            if Part and not ShouldSkipHitbox(Player) then
+            if Part and not S.ShouldSkipHitbox(Player) then
                 ActiveParts[Part] = true
-                ApplyHitbox(Player)
+                S.ApplyHitbox(Player)
             end
         end
     end
 
     for Part in pairs(HitboxOriginals) do
         if not ActiveParts[Part] then
-            RestoreHitboxPart(Part)
+            S.RestoreHitboxPart(Part)
         end
     end
 end
 
-local function StopHitboxExtender()
+function S.StopHitboxExtender()
     if HitboxRuntimeConnection then
         pcall(function()
             HitboxRuntimeConnection:Disconnect()
@@ -825,20 +835,20 @@ local function StopHitboxExtender()
     end
     table.clear(HitboxPlayerConnections)
 
-    RestoreAllHitboxes()
+    S.RestoreAllHitboxes()
 end
 
-local function StartHitboxExtender()
-    StopHitboxExtender()
+function S.StartHitboxExtender()
+    S.StopHitboxExtender()
 
     if not Config.HitboxEnabled then
         return
     end
 
-    HitboxRuntimeConnection = Connect(
+    HitboxRuntimeConnection = S.Connect(
         RunService.Heartbeat,
         function()
-            RefreshHitboxes()
+            S.RefreshHitboxes()
         end
     )
 
@@ -854,10 +864,10 @@ local function StartHitboxExtender()
         end
 
         HitboxPlayerConnections[Player] =
-            Player.CharacterAdded:Connect(function()
+            Player.CharacterAdded:S.Connect(function()
                 task.defer(function()
                     if Config.HitboxEnabled then
-                        RefreshHitboxes()
+                        S.RefreshHitboxes()
                     end
                 end)
             end)
@@ -869,33 +879,33 @@ local function StartHitboxExtender()
 
     table.insert(
         HitboxPlayerConnections,
-        Players.PlayerAdded:Connect(WatchPlayer)
+        Players.PlayerAdded:S.Connect(WatchPlayer)
     )
 
-    RefreshHitboxes()
+    S.RefreshHitboxes()
 end
 
-local function SetHitboxEnabled(Value)
+function S.SetHitboxEnabled(Value)
     Config.HitboxEnabled = Value
     SaveSettings()
 
     if Value then
-        StartHitboxExtender()
+        S.StartHitboxExtender()
     else
-        StopHitboxExtender()
+        S.StopHitboxExtender()
     end
 end
 
-local function SetHitboxPart(Value)
+function S.SetHitboxPart(Value)
     Config.HitboxPart = Value
     SaveSettings()
 
     if Config.HitboxEnabled then
-        RefreshHitboxes()
+        S.RefreshHitboxes()
     end
 end
 
-local function SetHitboxSize(Value)
+function S.SetHitboxSize(Value)
     local Number = tonumber(Value)
     if not Number then
         return false
@@ -905,13 +915,13 @@ local function SetHitboxSize(Value)
     SaveSettings()
 
     if Config.HitboxEnabled then
-        RefreshHitboxes()
+        S.RefreshHitboxes()
     end
 
     return true
 end
 
-local function RestoreFlyCharacter()
+function S.RestoreFlyCharacter()
     if not FlyOriginal then
         return
     end
@@ -929,7 +939,7 @@ local function RestoreFlyCharacter()
     FlyOriginal = nil
 end
 
-local function StopFly()
+function S.StopFly()
     if FlyConnection then
         pcall(function()
             FlyConnection:Disconnect()
@@ -960,11 +970,11 @@ local function StopFly()
 
     FlyKeys.Up = false
     FlyKeys.Down = false
-    RestoreFlyCharacter()
+    S.RestoreFlyCharacter()
 end
 
-local function StartFly()
-    StopFly()
+function S.StartFly()
+    S.StopFly()
 
     if not Config.FlyEnabled then
         return
@@ -985,7 +995,7 @@ local function StartFly()
 
     Humanoid.AutoRotate = false
 
-    FlyInputBeganConnection = Connect(
+    FlyInputBeganConnection = S.Connect(
         UserInputService.InputBegan,
         function(Input, GameProcessed)
             if GameProcessed then
@@ -1001,7 +1011,7 @@ local function StartFly()
         end
     )
 
-    FlyInputEndedConnection = Connect(
+    FlyInputEndedConnection = S.Connect(
         UserInputService.InputEnded,
         function(Input)
             if Input.KeyCode == Enum.KeyCode.Space then
@@ -1013,18 +1023,18 @@ local function StartFly()
         end
     )
 
-    FlyCharacterConnection = Connect(
+    FlyCharacterConnection = S.Connect(
         LocalPlayer.CharacterAdded,
         function()
             task.defer(function()
                 if Config.FlyEnabled then
-                    StartFly()
+                    S.StartFly()
                 end
             end)
         end
     )
 
-    FlyConnection = Connect(
+    FlyConnection = S.Connect(
         RunService.RenderStepped,
         function(Delta)
             if not Config.FlyEnabled then
@@ -1118,18 +1128,18 @@ local function StartFly()
     )
 end
 
-local function SetFlyEnabled(Value)
+function S.SetFlyEnabled(Value)
     Config.FlyEnabled = Value
     SaveSettings()
 
     if Value then
-        StartFly()
+        S.StartFly()
     else
-        StopFly()
+        S.StopFly()
     end
 end
 
-local function SetFlySpeed(Value)
+function S.SetFlySpeed(Value)
     local Number = tonumber(Value)
     if not Number then
         return false
@@ -1144,7 +1154,7 @@ end
 -- RAPID FIRE
 --==============================================================
 
-local function GetEquippedTool()
+function S.GetEquippedTool()
     local Character = LocalPlayer.Character
     if not Character then
         return nil
@@ -1159,7 +1169,7 @@ local function GetEquippedTool()
     return nil
 end
 
-local function GetRemoteCandidates(Tool)
+function S.GetRemoteCandidates(Tool)
     local Candidates = {}
 
     if not Tool then
@@ -1208,7 +1218,7 @@ local function GetRemoteCandidates(Tool)
     return Candidates
 end
 
-local function RapidMethodToolActivate(Tool)
+function S.RapidMethodToolActivate(Tool)
     if not Tool or not Tool:IsA("Tool") then
         return false
     end
@@ -1220,8 +1230,8 @@ local function RapidMethodToolActivate(Tool)
     return Success
 end
 
-local function RapidMethodRemoteNoArgs(Tool)
-    local Candidates = GetRemoteCandidates(Tool)
+function S.RapidMethodRemoteNoArgs(Tool)
+    local Candidates = S.GetRemoteCandidates(Tool)
 
     for _, Remote in ipairs(Candidates) do
         local Success = pcall(function()
@@ -1240,8 +1250,8 @@ local function RapidMethodRemoteNoArgs(Tool)
     return false
 end
 
-local function RapidMethodRemoteTool(Tool)
-    local Candidates = GetRemoteCandidates(Tool)
+function S.RapidMethodRemoteTool(Tool)
+    local Candidates = S.GetRemoteCandidates(Tool)
 
     for _, Remote in ipairs(Candidates) do
         local Success = pcall(function()
@@ -1261,12 +1271,12 @@ local function RapidMethodRemoteTool(Tool)
 end
 
 local RapidMethods = {
-    ["Method 1"] = RapidMethodToolActivate,
-    ["Method 2"] = RapidMethodRemoteNoArgs,
-    ["Method 3"] = RapidMethodRemoteTool,
+    ["Method 1"] = S.RapidMethodToolActivate,
+    ["Method 2"] = S.RapidMethodRemoteNoArgs,
+    ["Method 3"] = S.RapidMethodRemoteTool,
 }
 
-local function RunRapidFireMethod(Tool, MethodName)
+function S.RunRapidFireMethod(Tool, MethodName)
     if not Tool then
         return false
     end
@@ -1274,15 +1284,15 @@ local function RunRapidFireMethod(Tool, MethodName)
     if MethodName == "Auto / Best Method" then
         -- Prefer normal Tool activation first, then fall back to
         -- generic remote-based methods if the weapon exposes them.
-        if RapidMethodToolActivate(Tool) then
+        if S.RapidMethodToolActivate(Tool) then
             return true
         end
 
-        if RapidMethodRemoteNoArgs(Tool) then
+        if S.RapidMethodRemoteNoArgs(Tool) then
             return true
         end
 
-        return RapidMethodRemoteTool(Tool)
+        return S.RapidMethodRemoteTool(Tool)
     end
 
     local Method = RapidMethods[MethodName]
@@ -1294,7 +1304,7 @@ local function RunRapidFireMethod(Tool, MethodName)
     return Success and Result == true
 end
 
-local function StopRapidFire()
+function S.StopRapidFire()
     if RapidFireConnection then
         pcall(function()
             RapidFireConnection:Disconnect()
@@ -1305,17 +1315,17 @@ local function StopRapidFire()
     RapidFireLastTool = nil
 end
 
-local function StartRapidFire()
-    StopRapidFire()
+function S.StartRapidFire()
+    S.StopRapidFire()
 
     if not Config.RapidFireEnabled then
         return
     end
 
-    RapidFireConnection = Connect(
+    RapidFireConnection = S.Connect(
         RunService.Heartbeat,
         function()
-            local Tool = GetEquippedTool()
+            local Tool = S.GetEquippedTool()
 
             if not Tool then
                 RapidFireLastTool = nil
@@ -1327,7 +1337,7 @@ local function StartRapidFire()
             -- A very small interval is intentionally not hard-coded;
             -- Heartbeat naturally follows the client's frame/update rate.
             -- The selected method determines the actual firing path.
-            RunRapidFireMethod(
+            S.RunRapidFireMethod(
                 Tool,
                 Config.RapidFireMethod
             )
@@ -1335,23 +1345,23 @@ local function StartRapidFire()
     )
 end
 
-local function SetRapidFireEnabled(Value)
+function S.SetRapidFireEnabled(Value)
     Config.RapidFireEnabled = Value
     SaveSettings()
 
     if Value then
-        StartRapidFire()
+        S.StartRapidFire()
     else
-        StopRapidFire()
+        S.StopRapidFire()
     end
 end
 
-local function SetRapidFireMethod(Value)
+function S.SetRapidFireMethod(Value)
     Config.RapidFireMethod = Value
     SaveSettings()
 
     if Config.RapidFireEnabled then
-        StartRapidFire()
+        S.StartRapidFire()
     end
 end
 
@@ -1366,7 +1376,7 @@ CreateToggleRow(
         return Config.HitboxEnabled
     end,
     function(Value)
-        SetHitboxEnabled(Value)
+        S.SetHitboxEnabled(Value)
     end
 )
 
@@ -1380,7 +1390,7 @@ CreateToggleRow(
         Config.HitboxTransparent = Value
         SaveSettings()
         if Config.HitboxEnabled then
-            RefreshHitboxes()
+            S.RefreshHitboxes()
         end
     end
 )
@@ -1395,7 +1405,7 @@ CreateToggleRow(
         Config.HitboxWhitelistSkip = Value
         SaveSettings()
         if Config.HitboxEnabled then
-            RefreshHitboxes()
+            S.RefreshHitboxes()
         end
     end
 )
@@ -1406,7 +1416,7 @@ CreateInputRow(
     Config.HitboxSize
 )
 
-HitboxSizeBox.FocusLost:Connect(function()
+HitboxSizeBox.FocusLost:S.Connect(function()
     local Number = tonumber(HitboxSizeBox.Text)
 
     if Number then
@@ -1415,7 +1425,7 @@ HitboxSizeBox.FocusLost:Connect(function()
         SaveSettings()
 
         if Config.HitboxEnabled then
-            RefreshHitboxes()
+            S.RefreshHitboxes()
         end
 
         HitboxSizeBox.Text = tostring(Number)
@@ -1424,7 +1434,7 @@ HitboxSizeBox.FocusLost:Connect(function()
     end
 end)
 
-local function CreateRageDropdownRow(LabelText, Options, GetValue, SetValue)
+function S.CreateRageDropdownRow(LabelText, Options, GetValue, SetValue)
     local Row = CreateRow(44)
 
     CreateLabel(Row, LabelText)
@@ -1486,14 +1496,14 @@ local function CreateRageDropdownRow(LabelText, Options, GetValue, SetValue)
         Option.ZIndex = 61
         Option.Parent = OptionsFrame
 
-        Option.Activated:Connect(function()
+        Option.Activated:S.Connect(function()
             SetValue(OptionText)
             Button.Text = tostring(GetValue())
             Close()
         end)
     end
 
-    Button.Activated:Connect(function()
+    Button.Activated:S.Connect(function()
         if RageDropdownOpen and RageDropdownOpen ~= OptionsFrame then
             RageDropdownOpen.Visible = false
         end
@@ -1519,14 +1529,14 @@ local HitboxPartOptions = {
 }
 
 local HitboxPartRow, HitboxPartButton =
-CreateRageDropdownRow(
+S.CreateRageDropdownRow(
     "Part",
     HitboxPartOptions,
     function()
         return Config.HitboxPart
     end,
     function(Value)
-        SetHitboxPart(Value)
+        S.SetHitboxPart(Value)
     end
 )
 
@@ -1540,7 +1550,7 @@ CreateToggleRow(
         Config.HitboxFFCheck = Value
         SaveSettings()
         if Config.HitboxEnabled then
-            RefreshHitboxes()
+            S.RefreshHitboxes()
         end
     end
 )
@@ -1558,7 +1568,7 @@ CreateToggleRow(
         return Config.FlyEnabled
     end,
     function(Value)
-        SetFlyEnabled(Value)
+        S.SetFlyEnabled(Value)
     end
 )
 
@@ -1568,7 +1578,7 @@ CreateInputRow(
     Config.FlySpeed
 )
 
-FlySpeedBox.FocusLost:Connect(function()
+FlySpeedBox.FocusLost:S.Connect(function()
     local Number = tonumber(FlySpeedBox.Text)
 
     if Number then
@@ -1594,7 +1604,7 @@ CreateToggleRow(
         return Config.RapidFireEnabled
     end,
     function(Value)
-        SetRapidFireEnabled(Value)
+        S.SetRapidFireEnabled(Value)
     end
 )
 
@@ -1606,14 +1616,14 @@ local RapidFireMethodOptions = {
 }
 
 local RapidFireMethodRow, RapidFireMethodButton =
-CreateRageDropdownRow(
+S.CreateRageDropdownRow(
     "Method",
     RapidFireMethodOptions,
     function()
         return Config.RapidFireMethod
     end,
     function(Value)
-        SetRapidFireMethod(Value)
+        S.SetRapidFireMethod(Value)
     end
 )
 
@@ -1645,15 +1655,15 @@ SaveSettings()
 --==============================================================
 
 if Config.HitboxEnabled then
-    task.defer(StartHitboxExtender)
+    task.defer(S.StartHitboxExtender)
 end
 
 if Config.FlyEnabled then
-    task.defer(StartFly)
+    task.defer(S.StartFly)
 end
 
 if Config.RapidFireEnabled then
-    task.defer(StartRapidFire)
+    task.defer(S.StartRapidFire)
 end
 
 --==============================================================
@@ -1682,9 +1692,9 @@ Shared.Cleanup.Whitelist = function()
 end
 
 Shared.Cleanup.Rage = function()
-    pcall(StopHitboxExtender)
-    pcall(StopFly)
-    pcall(StopRapidFire)
+    pcall(S.StopHitboxExtender)
+    pcall(S.StopFly)
+    pcall(S.StopRapidFire)
     Shared.Modules.RageLoaded = false
 end
 
